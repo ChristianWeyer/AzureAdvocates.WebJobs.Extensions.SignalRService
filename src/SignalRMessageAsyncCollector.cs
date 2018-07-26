@@ -11,20 +11,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRMessageAsyncCollector : IAsyncCollector<SignalRMessage>
     {
-        private readonly AzureSignalR signalR;
-        private readonly string hubName;
-        
+        private readonly AzureSignalR _signalR;
+        private readonly string _hubName;
+
         public SignalRMessageAsyncCollector(SignalRConfiguration config, SignalRAttribute attr)
         {
-            signalR = new AzureSignalR(attr.ConnectionStringSetting);
-            hubName = attr.HubName;
+            _signalR = new AzureSignalR(attr.ConnectionStringSetting);
+            _hubName = attr.HubName;
         }
-        
-        public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
+
+        public Task AddAsync(string target, params object[] args)
         {
             var httpClient = HttpClientFactory.GetInstance();
-            var connectionInfo = signalR.GetServerConnectionInfo(hubName);
-            return PostJsonAsync(httpClient, connectionInfo.Endpoint, item, connectionInfo.AccessKey);
+            var connectionInfo = _signalR.GetServerConnectionInfo(_hubName);
+            var message = new SignalRMessage { Target = target, Arguments = args };
+
+            return PostJsonAsync(httpClient, connectionInfo.Endpoint, message, connectionInfo.AccessKey);
+        }
+
+        public Task AddAsync(SignalRMessage message, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var httpClient = HttpClientFactory.GetInstance();
+            var connectionInfo = _signalR.GetServerConnectionInfo(_hubName);
+
+            return PostJsonAsync(httpClient, connectionInfo.Endpoint, message, connectionInfo.AccessKey);
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -48,6 +58,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var content = JsonConvert.SerializeObject(body);
             request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+
             return httpClient.SendAsync(request);
         }
     }

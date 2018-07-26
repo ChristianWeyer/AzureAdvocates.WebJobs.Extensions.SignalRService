@@ -21,6 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+
             return new AzureSignalRConnectionInfo
             {
                 Endpoint = hubUrl,
@@ -32,6 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+
             return new AzureSignalRConnectionInfo
             {
                 Endpoint = hubUrl,
@@ -42,11 +44,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
         {
             var endpointMatch = Regex.Match(connectionString, @"endpoint=([^;]+)", RegexOptions.IgnoreCase);
+
             if (!endpointMatch.Success)
             {
                 throw new ArgumentException("No endpoint present in connection string");
             }
+
             var accessKeyMatch = Regex.Match(connectionString, @"accesskey=([^;]+)", RegexOptions.IgnoreCase);
+
             if (!accessKeyMatch.Success)
             {
                 throw new ArgumentException("No access key present in connection string");
@@ -58,11 +63,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private string GenerateJwtBearer(string issuer, string audience, ClaimsIdentity subject, DateTime? expires, string signingKey)
         {
             SigningCredentials credentials = null;
+
             if (!string.IsNullOrEmpty(signingKey))
             {
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
                 credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             }
+
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var token = jwtTokenHandler.CreateJwtSecurityToken(
                 issuer: issuer,
@@ -70,6 +77,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 subject: subject,
                 expires: expires,
                 signingCredentials: credentials);
+
             return jwtTokenHandler.WriteToken(token);
         }
     }

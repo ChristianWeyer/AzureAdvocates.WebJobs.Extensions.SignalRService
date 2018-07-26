@@ -21,6 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private AzureSignalRConnectionInfo GetConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
             var signalR = new AzureSignalR(attribute.ConnectionStringSetting);
+
             return signalR.GetClientConnectionInfo(attribute.HubName);
         }
 
